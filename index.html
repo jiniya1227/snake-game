@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코스믹 스네이크 (우주 지렁이 게임)</title>
+    <title>우주 지렁이 게임 (어르신 맞춤 편안 모드)</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         body {
@@ -22,14 +23,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #fff;
-            padding: 16px;
-            overflow: hidden;
+            padding: 16px 12px;
+            overflow-x: hidden;
         }
 
-        /* 우주 성운/먼지 효과 배경 캔버스 */
         #bgCanvas {
             position: fixed;
             top: 0;
@@ -46,57 +46,229 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            max-width: 900px;
+            width: 100%;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         h1 {
             font-size: 2.3rem;
             font-weight: 900;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             background: linear-gradient(135deg, #00f5ff, #bd00ff, #ff007f);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 16px rgba(0, 245, 255, 0.6));
-            margin-bottom: 6px;
-            text-transform: uppercase;
+            filter: drop-shadow(0 0 16px rgba(0, 245, 255, 0.5));
+            margin-bottom: 8px;
+        }
+
+        /* 컨트롤 모드 선택 탭 (어르신 맞춤 큼직한 탭) */
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            background: rgba(12, 16, 38, 0.8);
+            border: 1px solid rgba(0, 245, 255, 0.35);
+            padding: 6px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            color: #cfdbec;
+            font-size: 1.05rem;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mode-btn:hover {
+            background: rgba(0, 245, 255, 0.15);
+            color: #fff;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00f5ff, #8a2be2);
+            color: #030617;
+            font-weight: 900;
+            border-color: #00f5ff;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.6);
+        }
+
+        .scoreboard-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .scoreboard {
             display: flex;
-            gap: 24px;
-            background: rgba(15, 12, 41, 0.65);
+            gap: 20px;
+            background: rgba(15, 12, 41, 0.7);
             backdrop-filter: blur(12px);
-            padding: 10px 24px;
-            border-radius: 16px;
-            border: 1px solid rgba(0, 245, 255, 0.25);
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.15), inset 0 0 15px rgba(189, 0, 255, 0.1);
-            font-size: 1.05rem;
-            font-weight: 600;
+            padding: 8px 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            font-size: 1.15rem;
+            font-weight: 700;
         }
 
         .scoreboard span {
             color: #00f5ff;
-            font-weight: 800;
+            font-weight: 900;
             text-shadow: 0 0 10px #00f5ff;
+        }
+
+        .safe-mode-badge {
+            background: rgba(57, 255, 20, 0.15);
+            border: 1px solid #39ff14;
+            color: #79ff57;
+            padding: 7px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-guide-text {
+            color: #00f5ff;
+            background: rgba(0, 245, 255, 0.08);
+            border: 1px dashed rgba(0, 245, 255, 0.4);
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.98rem;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        /* 게임 메인 영역과 대형 컨트롤 패드 레이아웃 */
+        .game-main-area {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .game-wrapper {
             position: relative;
-            box-shadow: 0 0 50px rgba(112, 0, 255, 0.35), 0 0 20px rgba(0, 245, 255, 0.3);
-            border-radius: 16px;
+            box-shadow: 0 0 45px rgba(112, 0, 255, 0.35), 0 0 20px rgba(0, 245, 255, 0.3);
+            border-radius: 18px;
             overflow: hidden;
             border: 2px solid rgba(0, 245, 255, 0.4);
             background: #050614;
+            cursor: default;
+        }
+
+        .game-wrapper.mouse-mode {
+            cursor: crosshair;
         }
 
         canvas#gameCanvas {
             display: block;
         }
 
+        /* 3. 대형 원터치 방향 버튼 패널 (노인 맞춤 크기) */
+        .big-controls-panel {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(14, 18, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 245, 255, 0.4);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 0 25px rgba(0, 245, 255, 0.2);
+        }
+
+        .big-controls-panel.visible {
+            display: flex;
+        }
+
+        .big-controls-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffd700;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .big-pad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 86px);
+            grid-template-rows: repeat(3, 86px);
+            gap: 12px;
+        }
+
+        .big-d-btn {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.15), rgba(189, 0, 255, 0.2));
+            border: 2px solid #00f5ff;
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 1.6rem;
+            font-weight: 900;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.25);
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+        }
+
+        .big-d-btn span.label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-top: 2px;
+            color: #00f5ff;
+        }
+
+        .big-d-btn:active {
+            transform: scale(0.92);
+            background: linear-gradient(135deg, #00f5ff, #8a2be2);
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 245, 255, 0.8);
+        }
+        .big-d-btn:active span.label {
+            color: #000;
+        }
+
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-center {
+            grid-column: 2; grid-row: 2;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            font-size: 1.05rem;
+            color: #a5b9d4;
+            cursor: pointer;
+        }
+        .btn-right { grid-column: 3; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 3; }
+
+        /* 오버레이 */
         .overlay {
             position: absolute;
             inset: 0;
@@ -108,6 +280,8 @@
             justify-content: center;
             gap: 16px;
             z-index: 10;
+            padding: 20px;
+            text-align: center;
         }
 
         .overlay.hidden {
@@ -120,89 +294,46 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 15px rgba(255, 0, 127, 0.7));
-            text-transform: uppercase;
         }
 
         .overlay p {
-            font-size: 1rem;
+            font-size: 1.05rem;
             color: #b8c7e0;
-            text-align: center;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
-        .btn {
-            padding: 12px 32px;
-            font-size: 1.1rem;
-            font-weight: 800;
+        .btn-primary {
+            padding: 14px 40px;
+            font-size: 1.25rem;
+            font-weight: 900;
             color: #040615;
             background: linear-gradient(135deg, #00f5ff, #a700ff);
             border: none;
-            border-radius: 30px;
+            border-radius: 35px;
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 0 25px rgba(0, 245, 255, 0.6);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.6);
             letter-spacing: 1px;
         }
 
-        .btn:hover {
+        .btn-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 35px rgba(0, 245, 255, 0.9), 0 0 20px rgba(189, 0, 255, 0.7);
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.9);
         }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .controls-info {
+        /* 하단 타겟 점수 정보 */
+        .target-legend {
             margin-top: 14px;
-            font-size: 0.88rem;
-            color: #748ba7;
             display: flex;
-            gap: 16px;
-        }
-
-        .controls-info span {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* 터치/모바일 가상 패드 */
-        .d-pad {
-            margin-top: 16px;
-            display: grid;
-            grid-template-columns: repeat(3, 56px);
-            grid-template-rows: repeat(3, 56px);
-            gap: 6px;
-        }
-
-        .d-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            border-radius: 12px;
-            color: #00f5ff;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
-            touch-action: manipulation;
-        }
-
-        .d-btn:active {
-            background: rgba(0, 245, 255, 0.3);
-        }
-
-        .d-up { grid-column: 2; grid-row: 1; }
-        .d-left { grid-column: 1; grid-row: 2; }
-        .d-right { grid-column: 3; grid-row: 2; }
-        .d-down { grid-column: 2; grid-row: 3; }
-
-        @media (min-width: 600px) {
-            .d-pad {
-                display: none;
-            }
+            background: rgba(15, 12, 41, 0.6);
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            font-size: 0.9rem;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -212,45 +343,81 @@
     <div class="container">
         <div class="header">
             <h1>우주 지렁이 게임</h1>
+        </div>
+
+        <!-- 어르신을 위한 3대 특화 모드 선택기 -->
+        <div class="mode-selector">
+            <button class="mode-btn active" id="mode-mouse" onclick="selectControlMode('mouse')">
+                🖱️ 1. 마우스 따라오기
+            </button>
+            <button class="mode-btn" id="mode-target" onclick="selectControlMode('target')">
+                🎯 2. 타겟 원클릭 자동유도
+            </button>
+            <button class="mode-btn" id="mode-bigpad" onclick="selectControlMode('bigpad')">
+                🎛️ 3. 대형 원터치 버튼
+            </button>
+        </div>
+
+        <div class="scoreboard-row">
             <div class="scoreboard">
                 <div>점수: <span id="score">0</span></div>
                 <div>최고 기록: <span id="high-score">0</span></div>
             </div>
-        </div>
-
-        <div class="game-wrapper">
-            <canvas id="gameCanvas" width="440" height="440"></canvas>
-            <div id="overlay" class="overlay">
-                <h2 id="overlay-title">우주 탐험가</h2>
-                <p id="overlay-desc">우주 에너지를 흡수하여 은하수 지렁이를 키우세요.<br>우주 벽이나 꼬리에 닿지 않도록 주의하세요!</p>
-                <button id="start-btn" class="btn">워프 가동 (Space)</button>
+            <div class="safe-mode-badge" id="safe-mode-badge">
+                🛡️ 벽 충돌 방지(안심 워프) 가동 중
             </div>
         </div>
 
-        <div class="controls-info">
-            <span>방향키 / WASD : 이동</span>
-            <span>P : 일시정지</span>
-            <span>Space : 시작</span>
+        <!-- 현재 조작 모드 친절 안내 문구 -->
+        <div class="mode-guide-text" id="mode-guide-text">
+            💡 <b>마우스 따라오기:</b> 마우스 커서를 게임판 위에서 움직이면 지렁이가 커서를 향해 자동으로 유영합니다.
         </div>
 
-        <div style="margin-top: 10px; font-size: 0.85rem; color: #a5b9d4; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
+        <div class="game-main-area">
+            <div class="game-wrapper mouse-mode" id="game-wrapper">
+                <canvas id="gameCanvas" width="440" height="440"></canvas>
+                
+                <div id="overlay" class="overlay">
+                    <h2 id="overlay-title">우주 탐험가</h2>
+                    <p id="overlay-desc">원하는 조작 모드를 선택하신 후<br><b>시작 버튼</b>을 눌러주세요!</p>
+                    <button id="start-btn" class="btn-primary">게임 시작 (Space)</button>
+                </div>
+            </div>
+
+            <!-- 3번 모드: 대형 원터치 방향 버튼 패널 -->
+            <div class="big-controls-panel" id="big-controls-panel">
+                <div class="big-controls-title">큼직한 원터치 방향 버튼</div>
+                <div class="big-pad-grid">
+                    <button class="big-d-btn btn-up" id="btn-big-up">
+                        ▲<span class="label">위로</span>
+                    </button>
+                    <button class="big-d-btn btn-left" id="btn-big-left">
+                        ◀<span class="label">왼쪽</span>
+                    </button>
+                    <button class="big-d-btn btn-center" id="btn-big-pause">
+                        ⏸️<span class="label" id="pause-btn-label">멈춤</span>
+                    </button>
+                    <button class="big-d-btn btn-right" id="btn-big-right">
+                        ▶<span class="label">오른쪽</span>
+                    </button>
+                    <button class="big-d-btn btn-down" id="btn-big-down">
+                        ▼<span class="label">아래로</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="target-legend">
             <span style="color:#00f5ff">● 플라즈마(+1점)</span>
             <span style="color:#ffd700">★ 슈퍼스타(+3점)</span>
             <span style="color:#ff3366">◆ 크리스탈(+2점)</span>
             <span style="color:#39ff14">▲ 양자워프(+2점)</span>
             <span style="color:#bf55ec">🪐 코스믹 행성(+2점)</span>
         </div>
-
-        <div class="d-pad">
-            <button class="d-btn d-up" id="btn-up">▲</button>
-            <button class="d-btn d-left" id="btn-left">◀</button>
-            <button class="d-btn d-right" id="btn-right">▶</button>
-            <button class="d-btn d-down" id="btn-down">▼</button>
-        </div>
     </div>
 
     <script>
-        // --- 1. 배경 우주 별빛 애니메이션 ---
+        // --- 1. 배경 우주 별빛 ---
         const bgCanvas = document.getElementById('bgCanvas');
         const bgCtx = bgCanvas.getContext('2d');
         let bgStars = [];
@@ -259,7 +426,7 @@
             bgCanvas.width = window.innerWidth;
             bgCanvas.height = window.innerHeight;
             bgStars = [];
-            const count = Math.floor((bgCanvas.width * bgCanvas.height) / 3500);
+            const count = Math.floor((bgCanvas.width * bgCanvas.height) / 4000);
             for (let i = 0; i < count; i++) {
                 bgStars.push({
                     x: Math.random() * bgCanvas.width,
@@ -290,7 +457,7 @@
         }
         drawBackground();
 
-        // --- 2. 게임 로직 및 우주 그래픽 렌더링 ---
+        // --- 2. 게임 메인 로직 ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -299,13 +466,16 @@
         const overlayTitle = document.getElementById('overlay-title');
         const overlayDesc = document.getElementById('overlay-desc');
         const startBtn = document.getElementById('start-btn');
+        const gameWrapper = document.getElementById('game-wrapper');
+        const modeGuideText = document.getElementById('mode-guide-text');
+        const bigControlsPanel = document.getElementById('big-controls-panel');
+        const pauseBtnLabel = document.getElementById('pause-btn-label');
 
         const GRID_SIZE = 20;
         const TILE_COUNT = canvas.width / GRID_SIZE; // 22x22
-        const BASE_SPEED = 345; // 기존 대비 1배 더 느리게 (230ms -> 345ms)
-        const TARGET_COUNT = 5; // 화면에 항상 유지되는 목표 타겟 개수 (기존 1개 + 추가 4개 = 총 5개)
+        const BASE_SPEED = 345; // 노인 친화적 편안한 속도
+        const TARGET_COUNT = 5;
 
-        // 5종류의 우주 목표 타겟 타입 정의
         const TARGET_TYPES = [
             { id: 'plasma', name: '플라즈마 구체', score: 1, color: '#00f5ff', glow: '#00f5ff' },
             { id: 'star', name: '슈퍼스타', score: 3, color: '#ffd700', glow: '#ffaa00' },
@@ -314,42 +484,63 @@
             { id: 'planet', name: '미니 행성', score: 2, color: '#bf55ec', glow: '#9b59b6' }
         ];
 
+        let controlMode = 'mouse'; // 'mouse', 'target', 'bigpad'
+        let mouseTilePos = { x: 11, y: 11 };
+        let activeTargetDestination = null; // 타겟 원클릭 유도 시 목표 좌표
+
         let snake = [];
-        let targets = []; // 5개의 타겟 배열
-        let dx = 0, dy = 0;
-        let nextDx = 0, nextDy = 0;
+        let targets = [];
+        let dx = 0, dy = -1;
+        let nextDx = 0, nextDy = -1;
         let score = 0;
         let highScore = localStorage.getItem('snake_cosmic_high_score') || 0;
         let gameInterval = null;
         let isRunning = false;
         let isPaused = false;
-        let animFrameId = null;
-
-        // 반짝임 및 파티클 시스템
         let particles = [];
         let globalTime = 0;
 
         highScoreEl.textContent = highScore;
 
-        // 게임판 내부 우주 별들
+        // 게임판 내부 우주 별
         const internalStars = [];
         for (let i = 0; i < 40; i++) {
             internalStars.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                size: Math.random() * 1.6 + 0.4,
-                twinkleSpeed: Math.random() * 0.05 + 0.02,
+                size: Math.random() * 1.5 + 0.4,
+                twinkleSpeed: Math.random() * 0.04 + 0.02,
                 twinkleOffset: Math.random() * Math.PI * 2
             });
+        }
+
+        // 모드 전환 함수
+        function selectControlMode(mode) {
+            controlMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+
+            if (mode === 'mouse') {
+                gameWrapper.classList.add('mouse-mode');
+                bigControlsPanel.classList.remove('visible');
+                modeGuideText.innerHTML = `💡 <b>마우스 따라오기:</b> 마우스를 게임판 위에서 가볍게 움직이시면 지렁이가 커서를 향해 따라갑니다. (벽 충돌 방지 자동 적용)`;
+            } else if (mode === 'target') {
+                gameWrapper.classList.remove('mouse-mode');
+                bigControlsPanel.classList.remove('visible');
+                modeGuideText.innerHTML = `🎯 <b>원클릭 자동 유도:</b> 화면 속 먹고 싶은 별이나 보석을 <b>마우스로 콕 클릭</b>하시면 지렁이가 알아서 안전하게 찾아갑니다!`;
+            } else if (mode === 'bigpad') {
+                gameWrapper.classList.remove('mouse-mode');
+                bigControlsPanel.classList.add('visible');
+                modeGuideText.innerHTML = `🎛️ <b>대형 원터치 버튼:</b> 우측의 큼직한 화살표 버튼을 클릭하거나 터치하여 편안하게 방향을 조종하세요.`;
+            }
         }
 
         function createExplosion(x, y, color) {
             for (let i = 0; i < 16; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 3 + 1.2;
+                const speed = Math.random() * 3 + 1;
                 particles.push({
-                    x: x,
-                    y: y,
+                    x: x, y: y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     size: Math.random() * 3 + 1.5,
@@ -364,11 +555,11 @@
             particles.push({
                 x: x + (Math.random() - 0.5) * 6,
                 y: y + (Math.random() - 0.5) * 6,
-                vx: (Math.random() - 0.5) * 0.8,
-                vy: (Math.random() - 0.5) * 0.8,
-                size: Math.random() * 3.5 + 1.5,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                size: Math.random() * 3 + 1.2,
                 color: `hsl(${hue}, 100%, 75%)`,
-                alpha: 0.85,
+                alpha: 0.8,
                 decay: 0.05
             });
         }
@@ -386,7 +577,8 @@
             scoreEl.textContent = score;
             particles = [];
             targets = [];
-            // 화면에 5개의 목표 타겟 생성
+            activeTargetDestination = null;
+
             for (let i = 0; i < TARGET_COUNT; i++) {
                 spawnTarget(i);
             }
@@ -399,9 +591,7 @@
                 const rx = Math.floor(Math.random() * TILE_COUNT);
                 const ry = Math.floor(Math.random() * TILE_COUNT);
                 
-                // 지렁이 몸과 겹침 확인
                 const collidesSnake = snake.some(s => s.x === rx && s.y === ry);
-                // 다른 타겟과 겹침 확인
                 const collidesTarget = targets.some(t => t.x === rx && t.y === ry);
 
                 if (!collidesSnake && !collidesTarget) {
@@ -412,8 +602,7 @@
                     targets.push({
                         x: rx,
                         y: ry,
-                        type: chosenType,
-                        createdTime: globalTime
+                        type: chosenType
                     });
                     break;
                 }
@@ -425,13 +614,14 @@
             overlay.classList.add('hidden');
             isRunning = true;
             isPaused = false;
+            pauseBtnLabel.textContent = "멈춤";
             clearInterval(gameInterval);
             gameInterval = setInterval(gameStep, getSpeed());
         }
 
         function getSpeed() {
-            // 점수에 따라 점진적으로 빨라지되 여유로운 속도 유지 (최소 165ms)
-            return Math.max(165, BASE_SPEED - Math.floor(score / 2) * 5);
+            // 어르신 플레이를 위해 속도가 너무 빨라지지 않게 안전 제한 (최소 220ms 유지)
+            return Math.max(220, BASE_SPEED - Math.floor(score / 3) * 6);
         }
 
         function pauseGame() {
@@ -439,75 +629,131 @@
             isPaused = !isPaused;
             if (isPaused) {
                 clearInterval(gameInterval);
-                overlayTitle.textContent = "워프 일시정지";
-                overlayDesc.textContent = "P키 또는 재개 버튼을 눌러 비행을 계속하세요.";
-                startBtn.textContent = "비행 재개";
+                overlayTitle.textContent = "잠시 쉬어가기";
+                overlayDesc.textContent = "언제든 준비되시면 아래 버튼을 눌러 계속하세요.";
+                startBtn.textContent = "계속하기";
+                pauseBtnLabel.textContent = "재개";
                 overlay.classList.remove('hidden');
             } else {
                 overlay.classList.add('hidden');
+                pauseBtnLabel.textContent = "멈춤";
                 gameInterval = setInterval(gameStep, getSpeed());
             }
         }
 
-        function gameOver() {
-            clearInterval(gameInterval);
-            isRunning = false;
+        // 경로 탐색 보조: 목표 좌표(targetX, targetY)로 안전하게 향하는 최적 방향 계산
+        function findSafeDirectionTowards(targetX, targetY) {
+            const head = snake[0];
+            const possibleMoves = [
+                { dx: 0, dy: -1 }, // 상
+                { dx: 0, dy: 1 },  // 하
+                { dx: -1, dy: 0 }, // 좌
+                { dx: 1, dy: 0 }   // 우
+            ];
 
-            // 머리 위치에서 게임오버 파티클 폭발
-            if (snake[0]) {
-                const hx = snake[0].x * GRID_SIZE + GRID_SIZE / 2;
-                const hy = snake[0].y * GRID_SIZE + GRID_SIZE / 2;
-                createExplosion(hx, hy, '#ff0055');
-            }
+            // 1. 역주행(목 꺾임) 방지
+            const validMoves = possibleMoves.filter(m => !(m.dx === -dx && m.dy === -dy && snake.length > 1));
 
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('snake_cosmic_high_score', highScore);
-                highScoreEl.textContent = highScore;
-            }
-            overlayTitle.textContent = "코스믹 충돌!";
-            overlayDesc.innerHTML = `은하 탐사 점수: <b style="color:#00f5ff">${score}점</b><br>블랙홀에 빨려 들어갔습니다!`;
-            startBtn.textContent = "재도전 (Space)";
-            overlay.classList.remove('hidden');
+            // 2. 몸과 충돌하지 않는 안전한 후보 필터링
+            const safeMoves = validMoves.filter(m => {
+                const nextX = (head.x + m.dx + TILE_COUNT) % TILE_COUNT;
+                const nextY = (head.y + m.dy + TILE_COUNT) % TILE_COUNT;
+                return !snake.some((seg, idx) => idx > 0 && seg.x === nextX && seg.y === nextY);
+            });
+
+            const candidateMoves = safeMoves.length > 0 ? safeMoves : validMoves;
+
+            // 3. 목표 지점과의 거리가 가장 가까워지는 방향 선택
+            candidateMoves.sort((a, b) => {
+                const distA = Math.hypot((head.x + a.dx) - targetX, (head.y + a.dy) - targetY);
+                const distB = Math.hypot((head.x + b.dx) - targetX, (head.y + b.dy) - targetY);
+                return distA - distB;
+            });
+
+            return candidateMoves[0];
         }
 
         function gameStep() {
+            // 1) 마우스 따라오기 모드일 때 자동 유도 방향 갱신
+            if (controlMode === 'mouse' && mouseTilePos) {
+                const bestMove = findSafeDirectionTowards(mouseTilePos.x, mouseTilePos.y);
+                if (bestMove) {
+                    nextDx = bestMove.dx;
+                    nextDy = bestMove.dy;
+                }
+            }
+            // 2) 타겟 원클릭 자동 유도 모드일 때 선택된 타겟을 향해 자동 비행
+            else if (controlMode === 'target') {
+                if (!activeTargetDestination || !targets.some(t => t.x === activeTargetDestination.x && t.y === activeTargetDestination.y)) {
+                    // 선택된 타겟이 없거나 이미 먹었다면 가장 가까운 타겟 자동 선택
+                    let nearest = null;
+                    let minDist = Infinity;
+                    const head = snake[0];
+                    targets.forEach(t => {
+                        const d = Math.hypot(t.x - head.x, t.y - head.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            nearest = t;
+                        }
+                    });
+                    activeTargetDestination = nearest;
+                }
+
+                if (activeTargetDestination) {
+                    const bestMove = findSafeDirectionTowards(activeTargetDestination.x, activeTargetDestination.y);
+                    if (bestMove) {
+                        nextDx = bestMove.dx;
+                        nextDy = bestMove.dy;
+                    }
+                }
+            }
+
             dx = nextDx;
             dy = nextDy;
 
-            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            // 머리 이동 계산
+            let newHeadX = snake[0].x + dx;
+            let newHeadY = snake[0].y + dy;
 
-            // 벽 충돌 감지
-            if (head.x < 0 || head.x >= TILE_COUNT || head.y < 0 || head.y >= TILE_COUNT) {
-                gameOver();
-                return;
-            }
+            // ★ [벽 충돌 방지(안심 워프 모드)]
+            // 벽에 부딪혀서 게임이 허무하게 끝나지 않도록, 반대편 우주 공간으로 부드럽게 워프 통과!
+            if (newHeadX < 0) newHeadX = TILE_COUNT - 1;
+            else if (newHeadX >= TILE_COUNT) newHeadX = 0;
 
-            // 자기 몸 충돌
-            for (let i = 0; i < snake.length; i++) {
+            if (newHeadY < 0) newHeadY = TILE_COUNT - 1;
+            else if (newHeadY >= TILE_COUNT) newHeadY = 0;
+
+            const head = { x: newHeadX, y: newHeadY };
+
+            // 자기 몸 충돌 시 안전 감속 & 부드러운 회피
+            for (let i = 1; i < snake.length; i++) {
                 if (head.x === snake[i].x && head.y === snake[i].y) {
-                    gameOver();
-                    return;
+                    // 몸에 닿았을 땐 게임오버 대신 꼬리 1칸 안전 정리 (어르신 안심 룰)
+                    createExplosion(head.x * GRID_SIZE + 10, head.y * GRID_SIZE + 10, '#ffd700');
+                    snake.pop();
+                    break;
                 }
             }
 
             snake.unshift(head);
 
-            // 먹이(목표 타겟) 섭취 확인
+            // 먹이(타겟) 섭취 확인
             const eatenIndex = targets.findIndex(t => t.x === head.x && t.y === head.y);
             if (eatenIndex !== -1) {
                 const eatenTarget = targets[eatenIndex];
                 score += eatenTarget.type.score;
                 scoreEl.textContent = score;
 
-                // 획득 이펙트 파티클 (타겟 고유 색상으로 폭발)
                 const fx = eatenTarget.x * GRID_SIZE + GRID_SIZE / 2;
                 const fy = eatenTarget.y * GRID_SIZE + GRID_SIZE / 2;
                 createExplosion(fx, fy, eatenTarget.type.glow);
 
-                // 먹힌 타겟 제거 후 새 타겟 1개 재소환
                 targets.splice(eatenIndex, 1);
                 spawnTarget();
+
+                if (activeTargetDestination && activeTargetDestination.x === eatenTarget.x && activeTargetDestination.y === eatenTarget.y) {
+                    activeTargetDestination = null;
+                }
 
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameStep, getSpeed());
@@ -516,15 +762,15 @@
             }
         }
 
-        // --- 60fps 부드러운 그래픽 루프 ---
+        // --- 60fps 렌더링 루프 ---
         function render() {
             globalTime += 0.05;
 
-            // 1. 우주 배경 캔버스 클리어 및 그리드
+            // 1. 우주 배경판
             ctx.fillStyle = '#060719';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 보드 내부 반짝이는 우주 먼지/별
+            // 내부 반짝이 별
             for (let star of internalStars) {
                 const alpha = 0.3 + 0.4 * Math.sin(globalTime * star.twinkleSpeed * 10 + star.twinkleOffset);
                 ctx.fillStyle = `rgba(200, 230, 255, ${alpha})`;
@@ -533,21 +779,45 @@
                 ctx.fill();
             }
 
-            // 부드러운 네온 격자선
-            ctx.strokeStyle = 'rgba(0, 245, 255, 0.05)';
+            // 네온 격자선
+            ctx.strokeStyle = 'rgba(0, 245, 255, 0.06)';
             ctx.lineWidth = 1;
             for (let i = 0; i <= canvas.width; i += GRID_SIZE) {
                 ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
+                ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
                 ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
+                ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            // 마우스/타겟 유도 모드일 때 시각 가이드선 표시
+            if (isRunning && controlMode === 'mouse' && mouseTilePos && snake[0]) {
+                const hx = snake[0].x * GRID_SIZE + GRID_SIZE / 2;
+                const hy = snake[0].y * GRID_SIZE + GRID_SIZE / 2;
+                const mx = mouseTilePos.x * GRID_SIZE + GRID_SIZE / 2;
+                const my = mouseTilePos.y * GRID_SIZE + GRID_SIZE / 2;
+
+                // 마우스 위치 링 표시
+                ctx.strokeStyle = 'rgba(0, 245, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(mx, my, 12 + Math.sin(globalTime * 4) * 2, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 타겟 원클릭 유도 모드일 때 선택된 타겟 강조 링
+            if (isRunning && controlMode === 'target' && activeTargetDestination) {
+                const tx = activeTargetDestination.x * GRID_SIZE + GRID_SIZE / 2;
+                const ty = activeTargetDestination.y * GRID_SIZE + GRID_SIZE / 2;
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(tx, ty, 15 + Math.sin(globalTime * 5) * 3, 0, Math.PI * 2);
                 ctx.stroke();
             }
 
-            // 2. 파티클 업데이트 & 그리기
+            // 2. 파티클 이펙트
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -580,7 +850,6 @@
                 ctx.shadowColor = tType.glow;
 
                 if (tType.id === 'plasma') {
-                    // 1) 플라즈마 구체
                     const grad = ctx.createRadialGradient(tx, ty, 2, tx, ty, GRID_SIZE / 2 + pulse);
                     grad.addColorStop(0, '#ffffff');
                     grad.addColorStop(0.5, tType.color);
@@ -590,7 +859,6 @@
                     ctx.arc(tx, ty, GRID_SIZE / 2 - 1 + pulse, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (tType.id === 'star') {
-                    // 2) 슈퍼스타 (반짝이는 별 모양)
                     ctx.fillStyle = tType.color;
                     ctx.translate(tx, ty);
                     ctx.rotate(globalTime * 1.5);
@@ -604,25 +872,19 @@
                     ctx.closePath();
                     ctx.fill();
                 } else if (tType.id === 'crystal') {
-                    // 3) 우주 크리스탈 (회전하는 다이아몬드)
                     ctx.fillStyle = tType.color;
                     ctx.translate(tx, ty);
                     ctx.rotate(globalTime * 2);
                     const s = (GRID_SIZE / 2 - 2) + pulse * 0.5;
                     ctx.beginPath();
-                    ctx.moveTo(0, -s);
-                    ctx.lineTo(s, 0);
-                    ctx.lineTo(0, s);
-                    ctx.lineTo(-s, 0);
+                    ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0);
                     ctx.closePath();
                     ctx.fill();
-                    // 안쪽 빛
                     ctx.fillStyle = '#ffffff';
                     ctx.beginPath();
                     ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (tType.id === 'warp') {
-                    // 4) 양자 워프 에너지 (삼각형 역동 코어)
                     ctx.fillStyle = tType.color;
                     ctx.translate(tx, ty);
                     ctx.rotate(-globalTime * 2.5);
@@ -634,12 +896,10 @@
                     ctx.closePath();
                     ctx.fill();
                 } else if (tType.id === 'planet') {
-                    // 5) 고리가 있는 미니 행성
                     ctx.fillStyle = tType.color;
                     ctx.beginPath();
                     ctx.arc(tx, ty, 6, 0, Math.PI * 2);
                     ctx.fill();
-                    // 행성 고리
                     ctx.strokeStyle = '#ffffff';
                     ctx.lineWidth = 1.8;
                     ctx.beginPath();
@@ -650,33 +910,26 @@
                 ctx.restore();
             });
 
-            // 4. 은하수 오로라 지렁이 렌더링
+            // 4. 은하수 지렁이
             snake.forEach((segment, index) => {
                 const isHead = index === 0;
                 const progress = index / Math.max(1, snake.length);
-
-                // 무지개 은하수 네온 컬러 그라데이션 (시안 -> 퍼플 -> 마젠타)
                 const baseHue = (globalTime * 30 + index * 10) % 360;
                 const segCenterX = segment.x * GRID_SIZE + GRID_SIZE / 2;
                 const segCenterY = segment.y * GRID_SIZE + GRID_SIZE / 2;
 
-                // 꼬리에서 우주 별가루 방출 (running 상태일 때)
                 if (isRunning && Math.random() < 0.25) {
                     createTrail(segCenterX, segCenterY, baseHue);
                 }
 
                 ctx.save();
-
-                // 네온 글로우 발광
                 const glowIntensity = isHead ? 22 : 12;
                 ctx.shadowBlur = glowIntensity + Math.sin(globalTime * 4 + index) * 4;
                 ctx.shadowColor = `hsl(${baseHue}, 100%, 65%)`;
 
-                // 세그먼트 크기 (머리가 가장 크고 꼬리로 갈수록 얇아지는 유선형 바디)
                 const scale = isHead ? 1 : Math.max(0.65, 1 - progress * 0.35);
                 const segRadius = (GRID_SIZE / 2 - 1.5) * scale;
 
-                // 구체 그라데이션
                 const segGrad = ctx.createRadialGradient(
                     segCenterX - 2, segCenterY - 2, 1,
                     segCenterX, segCenterY, segRadius
@@ -697,35 +950,23 @@
                 ctx.arc(segCenterX, segCenterY, segRadius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 머리 눈빛 (신비로운 블루-화이트 눈)
                 if (isHead) {
-                    let eyeOffset1 = { x: 0, y: 0 };
-                    let eyeOffset2 = { x: 0, y: 0 };
+                    let eyeOffset1 = { x: 4, y: -4 };
+                    let eyeOffset2 = { x: 4, y: 4 };
 
-                    if (dx === 1) { // 우
-                        eyeOffset1 = { x: 4, y: -4 };
-                        eyeOffset2 = { x: 4, y: 4 };
-                    } else if (dx === -1) { // 좌
-                        eyeOffset1 = { x: -4, y: -4 };
-                        eyeOffset2 = { x: -4, y: 4 };
-                    } else if (dy === -1) { // 상
-                        eyeOffset1 = { x: -4, y: -4 };
-                        eyeOffset2 = { x: 4, y: -4 };
-                    } else { // 하
-                        eyeOffset1 = { x: -4, y: 4 };
-                        eyeOffset2 = { x: 4, y: 4 };
-                    }
+                    if (dx === 1) { eyeOffset1 = { x: 4, y: -4 }; eyeOffset2 = { x: 4, y: 4 }; }
+                    else if (dx === -1) { eyeOffset1 = { x: -4, y: -4 }; eyeOffset2 = { x: -4, y: 4 }; }
+                    else if (dy === -1) { eyeOffset1 = { x: -4, y: -4 }; eyeOffset2 = { x: 4, y: -4 }; }
+                    else { eyeOffset1 = { x: -4, y: 4 }; eyeOffset2 = { x: 4, y: 4 }; }
 
                     ctx.shadowBlur = 8;
                     ctx.shadowColor = '#ffffff';
                     ctx.fillStyle = '#ffffff';
-
                     ctx.beginPath();
                     ctx.arc(segCenterX + eyeOffset1.x, segCenterY + eyeOffset1.y, 2.4, 0, Math.PI * 2);
                     ctx.arc(segCenterX + eyeOffset2.x, segCenterY + eyeOffset2.y, 2.4, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // 동공
                     ctx.shadowBlur = 0;
                     ctx.fillStyle = '#050a24';
                     ctx.beginPath();
@@ -737,9 +978,50 @@
                 ctx.restore();
             });
 
-            animFrameId = requestAnimationFrame(render);
+            requestAnimationFrame(render);
         }
 
+        // --- 3. 입력 이벤트 연결 (마우스, 클릭, 대형 버튼) ---
+        function updateMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const mx = Math.max(0, Math.min(canvas.width - 1, clientX - rect.left));
+            const my = Math.max(0, Math.min(canvas.height - 1, clientY - rect.top));
+
+            mouseTilePos = {
+                x: Math.floor(mx / GRID_SIZE),
+                y: Math.floor(my / GRID_SIZE)
+            };
+        }
+
+        // 마우스 무브 (1번 마우스 따라오기)
+        canvas.addEventListener('mousemove', updateMousePos);
+        canvas.addEventListener('touchmove', (e) => {
+            updateMousePos(e);
+            e.preventDefault();
+        }, { passive: false });
+
+        // 마우스 클릭 (2번 타겟 원클릭 유도)
+        canvas.addEventListener('click', (e) => {
+            updateMousePos(e);
+            if (controlMode === 'target') {
+                // 클릭한 위치 주변의 타겟 찾기
+                const clickedTarget = targets.find(t => 
+                    Math.abs(t.x - mouseTilePos.x) <= 1 && Math.abs(t.y - mouseTilePos.y) <= 1
+                );
+                if (clickedTarget) {
+                    activeTargetDestination = clickedTarget;
+                    createExplosion(clickedTarget.x * GRID_SIZE + 10, clickedTarget.y * GRID_SIZE + 10, '#ffffff');
+                } else {
+                    // 빈 공간을 클릭했어도 그 위치로 유도
+                    activeTargetDestination = { x: mouseTilePos.x, y: mouseTilePos.y };
+                }
+            }
+        });
+
+        // 3번: 대형 원터치 버튼 조작
         function changeDirection(newDx, newDy) {
             if ((newDx !== 0 && dx === -newDx) || (newDy !== 0 && dy === -newDy)) {
                 return;
@@ -748,10 +1030,15 @@
             nextDy = newDy;
         }
 
-        // 키보드 조작
+        document.getElementById('btn-big-up').addEventListener('click', () => changeDirection(0, -1));
+        document.getElementById('btn-big-down').addEventListener('click', () => changeDirection(0, 1));
+        document.getElementById('btn-big-left').addEventListener('click', () => changeDirection(-1, 0));
+        document.getElementById('btn-big-right').addEventListener('click', () => changeDirection(1, 0));
+        document.getElementById('btn-big-pause').addEventListener('click', pauseGame);
+
+        // 키보드 조작도 병행 지원
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
-
             if (e.code === 'Space') {
                 e.preventDefault();
                 if (!isRunning || isPaused) {
@@ -760,44 +1047,24 @@
                 }
                 return;
             }
-
             if (key === 'p') {
                 pauseGame();
                 return;
             }
-
             if (!isRunning || isPaused) return;
 
             switch (key) {
-                case 'arrowup':
-                case 'w':
-                    changeDirection(0, -1);
-                    break;
-                case 'arrowdown':
-                case 's':
-                    changeDirection(0, 1);
-                    break;
-                case 'arrowleft':
-                case 'a':
-                    changeDirection(-1, 0);
-                    break;
-                case 'arrowright':
-                case 'd':
-                    changeDirection(1, 0);
-                    break;
+                case 'arrowup': case 'w': changeDirection(0, -1); break;
+                case 'arrowdown': case 's': changeDirection(0, 1); break;
+                case 'arrowleft': case 'a': changeDirection(-1, 0); break;
+                case 'arrowright': case 'd': changeDirection(1, 0); break;
             }
         });
 
-        // UI 버튼
         startBtn.addEventListener('click', () => {
             if (isPaused) pauseGame();
             else startGame();
         });
-
-        document.getElementById('btn-up').addEventListener('click', () => changeDirection(0, -1));
-        document.getElementById('btn-down').addEventListener('click', () => changeDirection(0, 1));
-        document.getElementById('btn-left').addEventListener('click', () => changeDirection(-1, 0));
-        document.getElementById('btn-right').addEventListener('click', () => changeDirection(1, 0));
 
         // 초기 시작
         initGame();
